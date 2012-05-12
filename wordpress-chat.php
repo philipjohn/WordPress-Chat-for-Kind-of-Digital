@@ -1,6 +1,6 @@
 <?php
 /*
- Plugin Name: WordPress Chat
+ Plugin Name: WordPress Chat for Kind of Digital
  Plugin URI: http://premium.wpmudev.org/project/wordpress-chat-plugin
  Description: Provides you with a fully featured chat area either in a
 post, page or bottom corner of your site - once activated configure <a
@@ -135,6 +135,7 @@ class Chat {
 		
 		// Add shortcode
 		add_shortcode('chat', array(&$this, 'process_shortcode'));
+		add_shortcode('chat_logs', array(&$this, 'chat_logs_shortcode'));
 		
 		$this->_chat_options['default'] = get_option('chat_default', array(
 			'sound'			=> 'enabled',
@@ -1964,6 +1965,46 @@ class Chat {
 		wp_localize_script('chat_js', 'chat_localized', $chat_localized);
 		
 		$chat_processed = 1;
+		
+		return $content;
+	}
+	
+	function chat_logs_shortcode($atts){
+		$a = shortcode_atts(array(
+			'id' => 1
+		), $atts);
+		
+		$dates = $this->get_archives($a['id']);
+			
+		if ( $dates && is_array($dates) ) {
+			$content .= '<div class="chat-note"><p><strong>' . __('Chat Logs', $this->translation_domain) . '</strong></p></div>';
+			foreach ($dates as $date) {
+				$date_content .= '<li><a class="chat-log-link" style="text-decoration: none;" href="' . $a['permalink'] . $a['url_separator'] . 'lid=' . $date->id . '">' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->start) + get_option('gmt_offset') * 3600, false) . ' - ' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->end) + get_option('gmt_offset') * 3600, false) . '</a>';
+				if (isset($_GET['lid']) && $_GET['lid'] == $date->id) {
+					$_POST['cid'] = $a['id'];
+					$_POST['archived'] = 'yes';
+					$_POST['function'] = 'update';
+					$_POST['since'] = strtotime($date->start);
+					$_POST['end'] = strtotime($date->end);
+					$_POST['date_color'] = $a['date_color'];
+					$_POST['name_color'] = $a['name_color'];
+					$_POST['moderator_name_color'] = $a['moderator_name_color'];
+					$_POST['text_color'] = $a['text_color'];
+					$_POST['date_show'] = $a['date_show'];
+					$_POST['time_show'] = $a['time_show'];
+					$_POST['avatar'] = $a['avatar'];
+					
+					$date_content .= '<div class="chat-wrap avatar-'.$a['avatar'].'" style="background-color: '.$a['background_color'].'; '.$a['font_style'].'"><div class="chat-area" >';
+					$date_content .= $this->process('yes');
+					$date_content .= '</div></div>';
+				}
+				$date_content .= '</li>';
+			}
+			
+			$content .= '<div id="chat-log-wrap-'.$a['id'].'" class="chat-log-wrap" style="background-color: '.$a['background_color'].'; '.$a['font_style'].'"><div id="chat-log-area-'.$a['id'].'" class="chat-log-area"><ul>' . $date_content . '</ul></div></div>';
+		}
+		
+		wp_localize_script('chat_js', 'chat_localized', $chat_localized);
 		
 		return $content;
 	}
