@@ -8,7 +8,7 @@ href="options-general.php?page=chat">here</a> and drop into a post or
 page by clicking on the new chat icon in your post/page editor.
  Author: S H Mohanjith (Incsub)
  WDP ID: 159
- Version: 1.0.9
+ Version: 1.0.10
  Author URI: http://premium.wpmudev.org
  Text Domain: chat
 */
@@ -222,6 +222,7 @@ class Chat {
 							avatar VARCHAR( 1024 ) CHARACTER SET utf8 NOT NULL ,
 							message TEXT CHARACTER SET utf8 NOT NULL ,
 							moderator ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no' ,
+							approved ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no' ,
 							archived ENUM( 'yes', 'no' ) NOT NULL DEFAULT 'no' ,
 							PRIMARY KEY (`id`),
 							KEY `blog_id` (`blog_id`),
@@ -581,7 +582,7 @@ class Chat {
 						}
 						var chat_login_options_arr = [];
 						jQuery('input[name=chat_login_options]:checked').each(function() {
-							chat_login_options_arr.push(jQuery(this).val())
+							chat_login_options_arr.push(jQuery(this).val());
 						});
 						if (default_options.login_options != jQuery.trim(chat_login_options_arr.join(','))) {
 							output += 'login_options="'+jQuery.trim(chat_login_options_arr.join(','))+'" ';
@@ -589,7 +590,7 @@ class Chat {
 						
 						var chat_moderator_roles_arr = [];
 						jQuery('input[name=chat_moderator_roles]:checked').each(function() {
-							chat_moderator_roles_arr.push(jQuery(this).val())
+							chat_moderator_roles_arr.push(jQuery(this).val());
 						});
 						if (default_options.moderator_roles != jQuery.trim(chat_moderator_roles_arr.join(','))) {
 							output += 'moderator_roles="'+jQuery.trim(chat_moderator_roles_arr.join(','))+'" ';
@@ -832,16 +833,16 @@ class Chat {
 									<tr>
 										<td valign="top"><label for="chat_login_options">{#chat_dlg.login_options}</label></td>
 										<td>
-											<lable><input type="checkbox" id="chat_login_options_current_user" name="chat_login_options" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_login_options_current_user" name="chat_login_options" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
 											<?php if (is_multisite()) { ?>
-											<lable><input type="checkbox" id="chat_login_options_network_user" name="chat_login_options" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_login_options_network_user" name="chat_login_options" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
 											<?php } ?>
-											<lable><input type="checkbox" id="chat_login_options_public_user" name="chat_login_options" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_login_options_public_user" name="chat_login_options" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
 											<?php if ($this->is_twitter_setup()) { ?>
-											<lable><input type="checkbox" id="chat_login_options_twitter" name="chat_login_options" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_login_options_twitter" name="chat_login_options" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
 											<?php } ?>
 											<?php if ($this->is_facebook_setup()) { ?>
-											<lable><input type="checkbox" id="chat_login_options_facebook" name="chat_login_options" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_login_options_facebook" name="chat_login_options" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
 											<?php } ?>
 										</td>
 										<td class="info"><?php _e("Authentication methods users can use", $this->translation_domain); ?></td>
@@ -853,7 +854,7 @@ class Chat {
 											foreach (get_editable_roles() as $role => $details) {
 												$name = translate_user_role($details['name'] );
 											?>
-											<lable><input type="checkbox" id="chat_moderator_roles_<?php print $role; ?>" name="chat_moderator_roles" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'))) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
+											<label><input type="checkbox" id="chat_moderator_roles_<?php print $role; ?>" name="chat_moderator_roles" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'))) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
 											<?php 
 											}
 											?>
@@ -1116,13 +1117,13 @@ class Chat {
 							<tr>
 								<td valign="top"><label for="chat_login_options"><?php _e('Login options', $this->translation_domain); ?></label></td>
 								<td>
-									<lable><input type="checkbox" id="chat_login_options_current_user" name="chat_default[login_options][]" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_current_user" name="chat_default[login_options][]" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
 									<?php if (is_multisite()) { ?>
-									<lable><input type="checkbox" id="chat_login_options_network_user" name="chat_default[login_options][]" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_network_user" name="chat_default[login_options][]" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
 									<?php } ?>
-									<lable><input type="checkbox" id="chat_login_options_public_user" name="chat_default[login_options][]" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
-									<lable><input type="checkbox" id="chat_login_options_twitter" name="chat_default[login_options][]" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
-									<lable><input type="checkbox" id="chat_login_options_facebook" name="chat_default[login_options][]" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_public_user" name="chat_default[login_options][]" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_twitter" name="chat_default[login_options][]" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_facebook" name="chat_default[login_options][]" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'))) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
 								</td>
 								<td class="info"><?php _e("Authentication methods users can use", $this->translation_domain); ?></td>
 							</tr>
@@ -1134,7 +1135,7 @@ class Chat {
 									foreach (get_editable_roles() as $role => $details) {
 										$name = translate_user_role($details['name'] );
 									?>
-									<lable><input type="checkbox" id="chat_moderator_roles_<?php print $role; ?>" name="chat_default[moderator_roles][]" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'))) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_moderator_roles_<?php print $role; ?>" name="chat_default[moderator_roles][]" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'))) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
 									<?php 
 									}
 									?>
@@ -1340,13 +1341,13 @@ class Chat {
 							<tr>
 								<td valign="top"><label for="chat_login_options_1"><?php _e('Login options', $this->translation_domain); ?></label></td>
 								<td>
-									<lable><input type="checkbox" id="chat_login_options_1_current_user" name="chat_site[login_options][]" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_1_current_user" name="chat_site[login_options][]" class="chat_login_options" value="current_user" <?php print (in_array('current_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Current user', $this->translation_domain); ?></label><br/>
 									<?php if (is_multisite()) { ?>
-									<lable><input type="checkbox" id="chat_login_options_1_network_user" name="chat_site[login_options][]" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_1_network_user" name="chat_site[login_options][]" class="chat_login_options" value="network_user" <?php print (in_array('network_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Network user', $this->translation_domain); ?></label><br/>
 									<?php } ?>
-									<lable><input type="checkbox" id="chat_login_options_1_public_user" name="chat_site[login_options][]" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
-									<lable><input type="checkbox" id="chat_login_options_1_twitter" name="chat_site[login_options][]" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
-									<lable><input type="checkbox" id="chat_login_options_1_facebook" name="chat_site[login_options][]" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_1_public_user" name="chat_site[login_options][]" class="chat_login_options" value="public_user" <?php print (in_array('public_user', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Public user', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_1_twitter" name="chat_site[login_options][]" class="chat_login_options" value="twitter" <?php print (!$this->is_twitter_setup())?'disabled="disabled"':''; ?> <?php print (in_array('twitter', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Twitter', $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_login_options_1_facebook" name="chat_site[login_options][]" class="chat_login_options" value="facebook" <?php print (!$this->is_facebook_setup())?'disabled="disabled"':''; ?> <?php print (in_array('facebook', $this->get_option('login_options', array('current_user'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e('Facebook', $this->translation_domain); ?></label><br/>
 								</td>
 								<td class="info"><?php _e("Authentication methods users can use", $this->translation_domain); ?></td>
 							</tr>
@@ -1358,7 +1359,7 @@ class Chat {
 									foreach (get_editable_roles() as $role => $details) {
 										$name = translate_user_role($details['name'] );
 									?>
-									<lable><input type="checkbox" id="chat_moderator_roles_1_<?php print $role; ?>" name="chat_site[moderator_roles][]" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
+									<label><input type="checkbox" id="chat_moderator_roles_1_<?php print $role; ?>" name="chat_site[moderator_roles][]" class="chat_moderator_roles" value="<?php print $role; ?>" <?php print (in_array($role, $this->get_option('moderator_roles', array('administrator','editor','author'), 'site')) > 0)?'checked="checked"':''; ?> /> <?php _e($name, $this->translation_domain); ?></label><br/>
 									<?php 
 									}
 									?>
@@ -1969,7 +1970,15 @@ class Chat {
 		return $content;
 	}
 	
-	function chat_logs_shortcode($atts){
+		/**
+		 * Chat logs shortcode
+		 * 
+		 * Show a list of chat logs indepdently of a post or page
+		 * 
+		 * @since 1.0.10
+		 * @author Philip John <phil@philipjohn.co.uk>
+		 */
+		function chat_logs_shortcode($atts){
 		$a = shortcode_atts(array(
 			'id' => 1
 		), $atts);
@@ -2215,15 +2224,15 @@ class Chat {
 	    
 		switch($function) {
 			case 'update':
-	    			$chat_id = $_POST['cid'];
-	    			$since = $_POST['since'];
+    			$chat_id = $_POST['cid'];
+    			$since = $_POST['since'];
 				$since_id = $_POST['since_id'];
-	    			$end = isset($_POST['end'])?$_POST['end']:0;
-	    			$archived = isset($_POST['archived'])?$_POST['archived']:'no';
+    			$end = isset($_POST['end'])?$_POST['end']:0;
+    			$archived = isset($_POST['archived'])?$_POST['archived']:'no';
 				$name = isset($_POST['name'])?$_POST['name']:md5('wordpress-chat');
 				$name = htmlentities(strip_tags($name));
 	    			
-	    			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
+    			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
 
 	    			if ($rows) {
 		    			$text = array();
@@ -2315,7 +2324,9 @@ class Chat {
 				
 				$smessage = strip_tags($smessage);
 				
-				$this->send_message($chat_id, $name, $avatar, base64_encode($smessage), $moderator);
+				$approved = 'yes'; // @todo create is_approved() function
+				
+				$this->send_message($chat_id, $name, $avatar, base64_encode($smessage), $moderator, $approved);
 				break;
 		}
 		
@@ -2408,6 +2419,7 @@ class Chat {
 		$avatar = $wpdb->_real_escape(trim($avatar));
 		$message = $wpdb->_real_escape(trim(base64_decode($message)));
 		$moderator_str = 'no';
+		$approved_str = 'no'; // If this message has been approved by a moderator
 		
 		if (empty($message)) {
 			return false;
@@ -2416,9 +2428,13 @@ class Chat {
 			$moderator_str = 'yes';
 		}
 		
+		if ($approved) { // this user has already been pre-approved
+			$approved_str= 'yes';
+		}
+		
 		return $wpdb->query("INSERT INTO ".Chat::tablename('message')."
-					(blog_id, chat_id, timestamp, name, avatar, message, archived, moderator)
-					VALUES ('$blog_id', '$chat_id', '$time_stamp', '$name', '$avatar', '$message', 'no', '$moderator_str');");
+					(blog_id, chat_id, timestamp, name, avatar, message, archived, moderator, approved)
+					VALUES ('$blog_id', '$chat_id', '$time_stamp', '$name', '$avatar', '$message', 'no', '$moderator_str', '$approved_str');");
 	}
 	
 	/**
