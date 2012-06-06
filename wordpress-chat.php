@@ -13,12 +13,6 @@ page by clicking on the new chat icon in your post/page editor.
  Text Domain: chat
 */
 
-function log_queries($query){
-	file_put_contents('query.log', "\r\n".$query, FILE_APPEND);
-	return $query;
-}
-add_filter('query', 'log_queries');
-
 /**
  * @global	object	$chat	Convenient access to the chat object
  */
@@ -2240,10 +2234,11 @@ class Chat {
 				$name = htmlentities(strip_tags($name));
 	    			
     			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
+    			//file_put_contents('messages.log', serialize($rows)."\r\n", FILE_APPEND);
 
 	    			if ($rows) {
 		    			$text = array();
-					$new_message = false;
+						$new_message = false;
 		    			
 		    			foreach ($rows as $row) {
 		    				$message = stripslashes($row->message);
@@ -2398,9 +2393,11 @@ class Chat {
 			$start = date('Y-m-d H:i:s', 0);
 		}
 		
-		return $wpdb->get_results(
-			"SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' AND id > '$since_id' ORDER BY timestamp ASC;"
-		);
+		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND approved = 'yes' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
+		$results = $wpdb->get_results($query);
+		file_put_contents('messages.log', $query."\r\n", FILE_APPEND);
+		file_put_contents('messages.log', serialize($results)."\r\n\r\n", FILE_APPEND);
+		return $results;
 	}
 	
 	/**
