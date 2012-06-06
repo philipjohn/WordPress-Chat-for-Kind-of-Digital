@@ -96,7 +96,7 @@ if (chat_localized) {
 					}
 				    }
 				    if (data.new_message && sounds !== 'disabled' && chat_localized['sound_'+pid] !== 'disabled' && pingSound ) {
-					pingSound.play('notify');
+					//pingSound.play('notify');
 					if (pid == 1) {
 					    jQuery('#chat-block-site').addClass('new_msg').click(function () {
 						jQuery(this).removeClass('new_msg');

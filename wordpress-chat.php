@@ -258,7 +258,7 @@ class Chat {
 		
 		// Default chat options
 		$this->_chat_options['default'] = array(
-			'sound'			=> 'enabled',
+			'sound'			=> 'disabled',
 			'avatar'		=> 'enabled',
 			'emoticons'		=> 'disabled',
 			'date_show'		=> 'disabled',
@@ -282,7 +282,7 @@ class Chat {
 		
 		// Site wide chat options
 		$this->_chat_options['site'] = array(
-			'site'			=> 'enabled',
+			'site'			=> 'disabled',
 			'sound'			=> 'enabled',
 			'avatar'		=> 'enabled',
 			'emoticons'		=> 'disabled',
@@ -915,7 +915,7 @@ class Chat {
 			<div id="chat_tab_pane" class="chat_tab_pane">
 				<ul>
 					<li><a href="#chat_default_panel"><span><?php _e('In post chat options', $this->translation_domain); ?></span></a></li>
-					<li><a href="#chat_site_panel"><span><?php _e('Bottom corner chat', $this->translation_domain); ?></span></a></li>
+					<!--li><a href="#chat_site_panel"><span><?php _e('Bottom corner chat', $this->translation_domain); ?></span></a></li-->
 					<li><a href="#chat_twitter_api_panel"><span><?php _e('Twitter API', $this->translation_domain); ?></span></a></li>
 					<li><a href="#chat_facebook_api_panel"><span><?php _e('Facebook API', $this->translation_domain); ?></span></a></li>
 					<li><a href="#chat_advanced_panel"><span><?php _e('Advanced', $this->translation_domain); ?></span></a></li>
@@ -927,7 +927,7 @@ class Chat {
 						<legend><?php _e('General', $this->translation_domain); ?></legend>
 		
 						<table border="0" cellpadding="4" cellspacing="0">
-							<tr>
+							<!--tr>
 								<td><label for="chat_sound"><?php _e('Sound', $this->translation_domain); ?></label></td>
 								<td>
 									<select id="chat_sound" name="chat_default[sound]" >
@@ -936,7 +936,7 @@ class Chat {
 									</select>
 								</td>
 								<td class="info"><?php _e("Play sound when a new message is received?", $this->translation_domain); ?></td>
-							</tr>	
+							</tr-->	
 								
 							<tr>
 								<td><label for="chat_avatar"><?php _e('Avatar', $this->translation_domain); ?></label></td>
@@ -1147,7 +1147,7 @@ class Chat {
 					</fieldset>
 				</div>
 				
-				<div id="chat_site_panel" class="chat_panel current">
+				<!-- div id="chat_site_panel" class="chat_panel current">
 					<p class="info">Options for the bottom corner chat</p>
 					<fieldset>
 						<legend><?php _e('Main', $this->translation_domain); ?></legend>
@@ -1369,7 +1369,7 @@ class Chat {
 							</tr>
 						</table>
 					</fieldset>
-				</div>
+				</div-->
 				
 				<div id="chat_twitter_api_panel" class="chat_panel chat_auth_panel">
 					<table border="0" cellpadding="4" cellspacing="0">
