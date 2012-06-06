@@ -2221,6 +2221,10 @@ class Chat {
 			$function = $_GET['function'];
 		}
 		
+		// Check if the current user is a moderator
+		$moderator_roles = explode(',', $_POST['moderator_roles']);
+		$moderator = $this->is_moderator($moderator_roles);
+		
 		$log = array();
 	    
 		switch($function) {
@@ -2234,7 +2238,6 @@ class Chat {
 				$name = htmlentities(strip_tags($name));
 	    			
     			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
-    			//file_put_contents('messages.log', serialize($rows)."\r\n", FILE_APPEND);
 
 	    			if ($rows) {
 		    			$text = array();
@@ -2317,16 +2320,13 @@ class Chat {
 				$avatar = (isset($_COOKIE['chat_stateless_user_image_'.$this->auth_type_map[$_POST['type']]]) && !empty($_COOKIE['chat_stateless_user_image_'.$this->auth_type_map[$_POST['type']]]))?$_COOKIE['chat_stateless_user_image_'.$this->auth_type_map[$_POST['type']]]:$current_user->user_email;
 				$message = $_POST['message'];
 				
-				$moderator_roles = explode(',', $_POST['moderator_roles']);
-				$moderator = $this->is_moderator($moderator_roles);
-				
 				$smessage = base64_decode($message);
 				
 	   			$smessage = preg_replace(array('/<code>/','/<\/code>/'), array('[code]', '[/code]'), $smessage);
 				
 				$smessage = strip_tags($smessage);
 				
-				$approved = 'yes'; // @todo create is_approved() function
+				$approved = is_approved(); // @todo find $blog_id
 				
 				$this->send_message($chat_id, $name, $avatar, base64_encode($smessage), $moderator, $approved);
 				break;
@@ -2342,6 +2342,22 @@ class Chat {
 			echo json_encode($log);
 			exit(0);
 		}
+	}
+	
+	/**
+	 * Test whether user has had a message approved yet
+	 * 
+	 * @param	integer	$blog_id	ID of the site we're on
+	 * @param	chat_id	$chat_id	ID of the specific chat
+	 * @param	string	$name	Name used in chat
+	 * @return	string	$approved	yes if approved no if not
+	 */
+	function is_approved($blog_id, $chat_id, $name){
+		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND name LIKE '$name' AND approved = 'yes';";
+		$results = $wpdb->get_results($query);
+		$num_rows = $wpdb->num_rows;
+		$approved = ($num_rows === 0) ? 'no' : 'yes';
+		return $approved; 
 	}
 	
 	/**
