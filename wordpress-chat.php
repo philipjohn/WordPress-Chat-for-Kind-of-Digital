@@ -12,6 +12,13 @@ page by clicking on the new chat icon in your post/page editor.
  Author URI: http://premium.wpmudev.org
  Text Domain: chat
 */
+
+function log_queries($query){
+	file_put_contents('query.log', "\r\n".$query, FILE_APPEND);
+	return $query;
+}
+add_filter('query', 'log_queries');
+
 /**
  * @global	object	$chat	Convenient access to the chat object
  */
@@ -229,7 +236,7 @@ class Chat {
 							KEY `chat_id` (`chat_id`),
 							KEY `timestamp` (`timestamp`),
 							KEY `archived` (`archived`)
-						) ENGINE = InnoDB {$charset_collate};";
+						);";
 			dbDelta($sql_main);
 		} else {
 			$wpdb->query("ALTER TABLE ".Chat::tablename('message')." CHANGE name name VARCHAR( 255 ) CHARACTER SET utf8 NOT NULL;");
@@ -252,7 +259,7 @@ class Chat {
 						PRIMARY KEY (`id`),
 						KEY `blog_id` (`blog_id`),
 						KEY `chat_id` (`chat_id`)
-					) ENGINE = InnoDB {$charset_collate};";
+					);";
 		dbDelta($sql_main);
 		
 		// Default chat options
@@ -2421,16 +2428,23 @@ class Chat {
 		$moderator_str = 'no';
 		$approved_str = 'no'; // If this message has been approved by a moderator
 		
+		// check for previously approved messages
+		$approvedq = $wpdb->get_results("SELECT * FROM ".Chat::tablename('message')." WHERE `name` LIKE '".$name."' AND `approved` = 'yes' LIMIT 1", ARRAY_A);
+		$approved = $wpdb->num_rows;
+		
 		if (empty($message)) {
 			return false;
 		}
 		if ($moderator) {
 			$moderator_str = 'yes';
+			$approved_str = 'yes';
 		}
 		
-		if ($approved) { // this user has already been pre-approved
+		if ($approved === 1) { // this user has already been pre-approved
 			$approved_str= 'yes';
 		}
+		
+		//$message = $query;
 		
 		return $wpdb->query("INSERT INTO ".Chat::tablename('message')."
 					(blog_id, chat_id, timestamp, name, avatar, message, archived, moderator, approved)
