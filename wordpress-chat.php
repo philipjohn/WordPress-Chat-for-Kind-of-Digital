@@ -2212,7 +2212,7 @@ class Chat {
 	 * @return	string			If $return is yes will return the output else echo
 	 */
 	function process($return = 'no') {
-		global $current_user;
+		global $current_user, $blog_id;
 		get_currentuserinfo();
 		
 		$function = $_POST['function'];
@@ -2236,7 +2236,7 @@ class Chat {
     			$archived = isset($_POST['archived'])?$_POST['archived']:'no';
 				$name = isset($_POST['name'])?$_POST['name']:md5('wordpress-chat');
 				$name = htmlentities(strip_tags($name));
-	    			
+    			
     			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
 
 	    			if ($rows) {
@@ -2326,7 +2326,8 @@ class Chat {
 				
 				$smessage = strip_tags($smessage);
 				
-				$approved = is_approved(); // @todo find $blog_id
+				//file_put_contents('messages.log', 'Blog ID: '.$blog_id.' | Chat ID: '.$chat_id.' | Name: '.trim(base64_decode($name))."\r\n");
+				$approved = $this->is_approved($blog_id, $chat_id, trim(base64_decode($name)));
 				
 				$this->send_message($chat_id, $name, $avatar, base64_encode($smessage), $moderator, $approved);
 				break;
@@ -2347,17 +2348,20 @@ class Chat {
 	/**
 	 * Test whether user has had a message approved yet
 	 * 
-	 * @param	integer	$blog_id	ID of the site we're on
-	 * @param	chat_id	$chat_id	ID of the specific chat
+	 * @param	int	$blog_id	ID of the site we're on
+	 * @param	int	$chat_id	ID of the specific chat
 	 * @param	string	$name	Name used in chat
 	 * @return	string	$approved	yes if approved no if not
 	 */
 	function is_approved($blog_id, $chat_id, $name){
 		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND name LIKE '$name' AND approved = 'yes';";
+		file_put_contents('messages.log', "Query: ".$query."\r\n", FILE_APPEND);
 		$results = $wpdb->get_results($query);
+		file_put_contents('messages.log', "Results: ".$results."\r\n", FILE_APPEND);
 		$num_rows = $wpdb->num_rows;
+		file_put_contents('messages.log', "Num rows: ".$num_rows."\r\n", FILE_APPEND);
 		$approved = ($num_rows === 0) ? 'no' : 'yes';
-		return $approved; 
+		return $approved;
 	}
 	
 	/**
@@ -2408,11 +2412,9 @@ class Chat {
 		} else {
 			$start = date('Y-m-d H:i:s', 0);
 		}
-		
+		// @todo include non-approved messages for admins and 'self'
 		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND approved = 'yes' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
 		$results = $wpdb->get_results($query);
-		file_put_contents('messages.log', $query."\r\n", FILE_APPEND);
-		file_put_contents('messages.log', serialize($results)."\r\n\r\n", FILE_APPEND);
 		return $results;
 	}
 	
