@@ -1,5 +1,5 @@
 === Chat ===
-Contributors: mohanjith
+Contributors: mohanjith, philipjohn
 Tags: chat, twitter, facebook, short code
 Requires at least: 3.0.0
 Stable tag: trunk
