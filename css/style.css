@@ -107,6 +107,14 @@ div.chat-wrap span.message {
 	padding-top: 0 !important;
 	min-height: 20px !important;
 }
+div.chat-wrap span.moderation {
+	display: block;
+	font-style: italic;
+}
+div.chat-wrap span.moderation ul li {
+	display: inline;
+	list-style-type: none;
+}
 div.chat-emoticons-list img {
 	cursor: pointer !important;
 }

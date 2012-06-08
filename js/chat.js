@@ -484,6 +484,10 @@ if (chat_localized) {
 	    pid = e.target.id.replace('chat-area-', '');
 	    scrollHeight[pid] = $(e.target).scrollTop()+$(e.target).height();
 	});
+	
+	$('.approve_once').click(function(){
+		alert("You clicked the approve once link");
+	});
     })(jQuery);
 }
 

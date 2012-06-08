@@ -2237,15 +2237,16 @@ class Chat {
 	    
 		switch($function) {
 			case 'update':
-    			$chat_id = $_POST['cid'];
+				$chat_id = $_POST['cid'];
     			$since = $_POST['since'];
 				$since_id = $_POST['since_id'];
     			$end = isset($_POST['end'])?$_POST['end']:0;
     			$archived = isset($_POST['archived'])?$_POST['archived']:'no';
 				$name = isset($_POST['name'])?$_POST['name']:md5('wordpress-chat');
 				$name = htmlentities(strip_tags($name));
+				$approved = $this->is_approved($blog_id, $chat_id, $uname);
     			
-    			$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id);
+				$rows = $this->get_messages($chat_id, $since, $end, $archived, $since_id, $moderator, array($approved, $name));
 
 	    			if ($rows) {
 		    			$text = array();
@@ -2301,16 +2302,26 @@ class Chat {
 		    				if ($_POST['time_show'] == 'enabled') {
 		    					$prepend .= ' <span class="time" style="background: '.$_POST['date_color'].';">'. date_i18n(get_option('time_format'), strtotime($row->timestamp) + get_option('gmt_offset') * 3600, false) . '</span>';
 		    				}
-		    				
-						if ($row->moderator == 'yes') {
-							$name_color = $_POST['moderator_name_color'];
-						} else {
-							$name_color = $_POST['name_color'];
-						}
+			    				
+							if ($row->moderator == 'yes') {
+								$name_color = $_POST['moderator_name_color'];
+							} else {
+								$name_color = $_POST['name_color'];
+							}
+							
+							if ($moderator && $row->approved == 'no'){
+								$moderation = '<span class="moderation">
+									<ul>
+										<li class="status">Pending</li>
+										<li><input class="approve_once" type="button" value="Approve this comment" /></li>
+										<li><input class="approve_user" type="button" value="Approve all user\'s messages" /></li>
+									</ul>
+								</div>';
+							}
 						
 		    				$prepend .= ' <span class="name" style="background: '.$name_color.';">'.stripslashes($row->name).'</span>';
 		    				
-		    				$text[$row->id] = " <div id='row-".strtotime($row->timestamp)."' class='row'>{$prepend}<span class='message' style='color: ".$_POST['text_color']."'>".convert_smilies($message)."</span><div class='chat-clear'></div></div>";
+		    				$text[$row->id] = " <div id='row-".strtotime($row->timestamp)."' class='row'>{$prepend}<span class='message' style='color: ".$_POST['text_color']."'>".convert_smilies($message)."</span>$moderation<div class='chat-clear'></div></div>";
 		    				$last_check = $row->timestamp;
 						if ($name != $row->name) {
 							$new_message = true;
@@ -2397,8 +2408,11 @@ class Chat {
 	 * @param	int		$since		Start Unix timestamp
 	 * @param	int		$end		End Unix timestamp
 	 * @param	string	$archived	Archived? 'yes' or 'no'
+	 * 
+	 * @todo include non-approved messages for admins
+	 * @todo include non-approved messages for 'self'
 	 */
-	function get_messages($chat_id, $since = 0, $end = 0, $archived = 'no', $since_id = false) {
+	function get_messages($chat_id, $since = 0, $end = 0, $archived = 'no', $since_id = false, $moderator = false, $is_approved = array('yes')) {
 		global $wpdb, $blog_id;
 		
 		$chat_id = $wpdb->escape($chat_id);
@@ -2417,9 +2431,18 @@ class Chat {
 		} else {
 			$start = date('Y-m-d H:i:s', 0);
 		}
-		// @todo include non-approved messages for admins and 'self'
-		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND approved = 'yes' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
+		
+		$approved = ($moderator) ? "" : " AND approved = 'yes'"; // show unapproved messages to moderators
+		
+		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id'$approved AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
 		$results = $wpdb->get_results($query);
+		
+		if ($is_approved[0] == 'no'){
+			$aquery = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND name = '$is_approved[1]' AND approved = 'no' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
+			$aresults = $wpdb->get_results($aquery);
+			if ($wpdb->num_rows >0) { $results = array_merge($results, $wpdb->get_results($aquery)); }
+		}
+		
 		return $results;
 	}
 	
