@@ -13,6 +13,14 @@ page by clicking on the new chat icon in your post/page editor.
  Text Domain: chat
 */
 
+/*function log_all_queries($query){
+	if (strpos($query, 'LIKE') !== false){
+		file_put_contents(ABSPATH.'query.log', date('H:i:s')." ".$query."\r\n", FILE_APPEND);
+	}
+	return $query;
+}
+add_filter('query', 'log_all_queries');*/
+
 /**
  * @global	object	$chat	Convenient access to the chat object
  */
@@ -2326,7 +2334,6 @@ class Chat {
 				
 				$smessage = strip_tags($smessage);
 				
-				//file_put_contents('messages.log', 'Blog ID: '.$blog_id.' | Chat ID: '.$chat_id.' | Name: '.trim(base64_decode($name))."\r\n");
 				$approved = $this->is_approved($blog_id, $chat_id, trim(base64_decode($name)));
 				
 				$this->send_message($chat_id, $name, $avatar, base64_encode($smessage), $moderator, $approved);
@@ -2354,12 +2361,10 @@ class Chat {
 	 * @return	string	$approved	yes if approved no if not
 	 */
 	function is_approved($blog_id, $chat_id, $name){
+		global $wpdb;
 		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND name LIKE '$name' AND approved = 'yes';";
-		file_put_contents('messages.log', "Query: ".$query."\r\n", FILE_APPEND);
-		$results = $wpdb->get_results($query);
-		file_put_contents('messages.log', "Results: ".$results."\r\n", FILE_APPEND);
+		$results = $wpdb->get_results($query, ARRAY_A);
 		$num_rows = $wpdb->num_rows;
-		file_put_contents('messages.log', "Num rows: ".$num_rows."\r\n", FILE_APPEND);
 		$approved = ($num_rows === 0) ? 'no' : 'yes';
 		return $approved;
 	}
@@ -2557,14 +2562,3 @@ class Chat {
 
 // Lets get things started
 $chat = new Chat();
-
-if ( !function_exists( 'wdp_un_check' ) ) {
-	add_action( 'admin_notices', 'wdp_un_check', 5 );
-	add_action( 'network_admin_notices', 'wdp_un_check', 5 );
-
-	function wdp_un_check() {
-		if ( !class_exists( 'WPMUDEV_Update_Notifications' ) && current_user_can( 'edit_users' ) )
-			echo '<div class="error fade"><p>' . __('Please install the latest version of <a href="http://premium.wpmudev.org/project/update-notifications/" title="Download Now &raquo;">our free Update Notifications plugin</a> which helps you stay up-to-date with the most stable, secure versions of WPMU DEV themes and plugins. <a href="http://premium.wpmudev.org/wpmu-dev/update-notifications-plugin-information/">More information &raquo;</a>', 'wpmudev') . '</a></p></div>';
-	}
-}
-
