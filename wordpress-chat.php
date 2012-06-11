@@ -171,7 +171,7 @@ class Chat {
 			));
 		
 		$this->_chat_options['site'] = get_option('chat_site', array(
-			'site'			=> 'enabled',
+			'site'			=> 'disabled',
 			'sound'			=> 'enabled',
 			'avatar'		=> 'enabled',
 			'emoticons'		=> 'disabled',
@@ -2229,6 +2229,15 @@ class Chat {
 			$function = $_GET['function'];
 		}
 		
+		file_put_contents(trailingslashit(ABSPATH).'query.log', "POST: \r\n", FILE_APPEND);
+		foreach ($_POST as $key => $value){
+			file_put_contents(trailingslashit(ABSPATH).'query.log', "	$key: $value\r\n", FILE_APPEND);
+		}
+		file_put_contents(trailingslashit(ABSPATH).'query.log', "GET: \r\n", FILE_APPEND);
+		foreach ($_GET as $key => $value){
+			file_put_contents(trailingslashit(ABSPATH).'query.log', "	$key: $value\r\n", FILE_APPEND);
+		}
+		
 		// Check if the current user is a moderator
 		$moderator_roles = explode(',', $_POST['moderator_roles']);
 		$moderator = $this->is_moderator($moderator_roles);
@@ -2236,6 +2245,13 @@ class Chat {
 		$log = array();
 	    
 		switch($function) {
+			case 'approve_once':
+				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$message_id\r\n", FILE_APPEND);
+				$message_id = $_POST['message_id'];
+				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE  id =".date('Y-m-d H:i:s', $message_id)." LIMIT 1";
+				$wpdb->query($update_query);
+				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$update_query\r\n", FILE_APPEND);
+				break;
 			case 'update':
 				$chat_id = $_POST['cid'];
     			$since = $_POST['since'];
@@ -2313,8 +2329,8 @@ class Chat {
 								$moderation = '<span class="moderation">
 									<ul>
 										<li class="status">Pending</li>
-										<li><input class="approve_once" type="button" value="Approve this comment" /></li>
-										<li><input class="approve_user" type="button" value="Approve all user\'s messages" /></li>
+										<li><a class="approve_once" href="#" onClick="approveOnce(this)">Approve this comment</a></li>
+										<li><a class="approve_user" href="#">Approve all user\'s messages</a></li>
 									</ul>
 								</div>';
 							}

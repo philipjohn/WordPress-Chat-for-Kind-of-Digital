@@ -133,8 +133,8 @@ if (chat_localized) {
 	jQuery.ajax({
 		       type: "POST",
 		       url: chat_localized["url"],
-		       data: {  
-					    'function': 'send',
+		       data: {
+						'function': 'send',
 					    'cid': pid,
 					    'message': message,
 					    'name': name,
@@ -146,7 +146,7 @@ if (chat_localized) {
 				     },
 		       dataType: "json",
 		       success: function(data){
-			    updateChat(sounds);
+				    	 updateChat(sounds);
 		       }
 		    });
     }
@@ -185,6 +185,29 @@ if (chat_localized) {
 		       dataType: "json",
 		       success: function(data){
 					     window.location.reload();
+		       }
+		    });
+    }
+    
+    function approveOnce(element){
+    	var message_id = jQuery(element).parents("div").attr("id");
+    	var newid = message_id.substr(4);
+    	
+    	jQuery.ajax({
+		       type: "POST",
+		       url: chat_localized["url"],
+		       data: {  
+					    'function': 'approve_once',
+    					'cid': pid,
+					    'vip': vip,
+					    'file': file,
+					    'action': 'approveOnce',
+					    'message_id': newid
+				     },
+		       dataType: "json",
+		       success: function(data){
+				    	 alert(data);
+				    	 jQuery(element).parent().html('Approved!');
 		       }
 		    });
     }
@@ -362,7 +385,6 @@ if (chat_localized) {
 	    });
     })(jQuery);
     
-    
     (function($) {
 	if (chat_localized['twitter_active']) {
 	    twttr.anywhere(function (T) {
@@ -483,10 +505,6 @@ if (chat_localized) {
 	$('div.chat-area').scroll(function(e) {
 	    pid = e.target.id.replace('chat-area-', '');
 	    scrollHeight[pid] = $(e.target).scrollTop()+$(e.target).height();
-	});
-	
-	$('.approve_once').click(function(){
-		alert("You clicked the approve once link");
 	});
     })(jQuery);
 }
