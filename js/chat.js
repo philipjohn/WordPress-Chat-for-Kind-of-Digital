@@ -190,7 +190,7 @@ if (chat_localized) {
     }
     
     function approveOnce(element){
-    	var message_id = jQuery(element).parents("div").attr("id");
+    	var pid = message_id = jQuery(element).parents("div").attr("id");
     	var newid = message_id.substr(4);
     	
     	jQuery.ajax({
@@ -206,7 +206,6 @@ if (chat_localized) {
 				     },
 		       dataType: "json",
 		       success: function(data){
-				    	 alert(data);
 				    	 jQuery(element).parent().html('Approved!');
 		       }
 		    });
