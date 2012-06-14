@@ -125,6 +125,9 @@ class Chat {
 		add_action('admin_print_scripts-settings_page_chat', array(&$this, 'admin_scripts'));
 		
 		// Filters
+		//WT HACK
+		add_action('wp_ajax_approveOnce', array(&$this, 'process'));
+
 		// From process.php
 		add_action('wp_ajax_chatProcess', array(&$this, 'process'));
 		add_action('wp_ajax_nopriv_chatProcess', array(&$this, 'process'));
@@ -2220,7 +2223,7 @@ class Chat {
 	 * @return	string			If $return is yes will return the output else echo
 	 */
 	function process($return = 'no') {
-		global $current_user, $blog_id;
+		global $current_user, $blog_id, $wpdb;
 		get_currentuserinfo();
 		
 		$function = $_POST['function'];
@@ -2241,16 +2244,18 @@ class Chat {
 		// Check if the current user is a moderator
 		$moderator_roles = explode(',', $_POST['moderator_roles']);
 		$moderator = $this->is_moderator($moderator_roles);
-		
+		$message_id = $_POST['message_id'];
 		$log = array();
-	    
 		switch($function) {
 			case 'approve_once':
 				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$message_id\r\n", FILE_APPEND);
 				$message_id = $_POST['message_id'];
-				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE  id =".date('Y-m-d H:i:s', $message_id)." LIMIT 1";
+				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE  `timestamp`='".date('Y-m-d H:i:s', $message_id)."' LIMIT 1";
 				$wpdb->query($update_query);
+				var_dump($update_query);
 				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$update_query\r\n", FILE_APPEND);
+				var_dump($wpdb);
+				die($update_query);
 				break;
 			case 'update':
 				$chat_id = $_POST['cid'];
