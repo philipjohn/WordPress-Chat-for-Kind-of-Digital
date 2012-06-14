@@ -2252,10 +2252,7 @@ class Chat {
 				$message_id = $_POST['message_id'];
 				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE  `timestamp`='".date('Y-m-d H:i:s', $message_id)."' LIMIT 1";
 				$wpdb->query($update_query);
-				var_dump($update_query);
 				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$update_query\r\n", FILE_APPEND);
-				var_dump($wpdb);
-				die($update_query);
 				break;
 			case 'update':
 				$chat_id = $_POST['cid'];
