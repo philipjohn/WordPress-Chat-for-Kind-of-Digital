@@ -2245,11 +2245,14 @@ class Chat {
 	    
 		switch($function) {
 			case 'approve':
-				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$message_id\r\n", FILE_APPEND);
 				$message_id = $_POST['message_id'];
 				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE `timestamp`='".date('Y-m-d H:i:s', $message_id)."' LIMIT 1";
 				$wpdb->query($update_query);
-				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$update_query\r\n", FILE_APPEND);
+				break;
+			case 'delete':
+				$message_id = $_POST['message_id'];
+				$delete_query = "DELETE FROM `".Chat::tablename('message')."` WHERE `timestamp`='".date('Y-m-d H:i:s', $message_id)."' LIMIT 1";
+				$wpdb->query($delete_query);
 				break;
 			case 'update':
 				$chat_id = $_POST['cid'];
@@ -2324,19 +2327,27 @@ class Chat {
 								$name_color = $_POST['name_color'];
 							}
 							
+							// Show moderation tools to moderators for unapproved messages
 							if ($moderator && $row->approved == 'no'){
 								$moderation = '<span class="moderation">
 									<a class="approve_once" href="#" onClick="approveMsg(this)">Approve this comment</a>
 								</span>';
-							} else if ($moderator !==1 && $row->approved == 'no'){
+							}
+							// Show message to users whose messages are unapproved
+							else if ($moderator !==1 && $row->approved == 'no'){
 								$moderation = '<span class="moderation">
 									Your comment is pending approval by a moderator.
 								</span>';
 							}
+							
+							// Allow moderators to delete messages
+							if ($moderator){
+								$delete = '<span class="delete"><a href="#" onClick="deleteMsg(this)">Delete this message</a></span>';
+							}
 						
 		    				$prepend .= ' <span class="name" style="background: '.$name_color.';">'.stripslashes($row->name).'</span>';
 		    				
-		    				$text[$row->id] = " <div id='row-".strtotime($row->timestamp)."' class='row'>{$prepend}<span class='message' style='color: ".$_POST['text_color']."'>".convert_smilies($message)."</span>$moderation<div class='chat-clear'></div></div>";
+		    				$text[$row->id] = " <div id='row-".strtotime($row->timestamp)."' class='row'>{$prepend}<span class='message' style='color: ".$_POST['text_color']."'>".convert_smilies($message)."</span>$moderation $delete<div class='chat-clear'></div></div>";
 		    				$last_check = $row->timestamp;
 		    				
 							if ($name != $row->name) {

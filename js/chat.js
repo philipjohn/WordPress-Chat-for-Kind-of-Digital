@@ -213,6 +213,30 @@ if (chat_localized) {
 		    });
     }
     
+    function deleteMsg(element){
+    	var div = jQuery(element).parents("div.row");
+    	var pid = message_id = div.attr("id");
+    	var newid = message_id.substr(4);
+    	jQuery(div).children("span.delete").html('Deleting...');
+    	
+    	jQuery.ajax({
+		       type: "POST",
+		       url: chat_localized["url"],
+		       data: {  
+					    'function': 'delete',
+    					'cid': pid,
+					    'vip': vip,
+					    'file': file,
+					    'action': 'chatProcess',
+					    'message_id': newid
+				     },
+		       dataType: "json",
+		       success: function(data){
+				    	 jQuery(div).remove();
+		       }
+		    });
+    }
+    
     function setupChat(pid, sounds)
     {
 	postid = pid;
