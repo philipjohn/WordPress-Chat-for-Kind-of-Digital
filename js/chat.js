@@ -189,24 +189,26 @@ if (chat_localized) {
 		    });
     }
     
-    function approveOnce(element){
-    	var pid = message_id = jQuery(element).parents("div").attr("id");
+    function approveMsg(element){
+    	var div = jQuery(element).parents("div");
+    	var pid = message_id = div.attr("id");
     	var newid = message_id.substr(4);
+    	jQuery(div).children("span.moderation").html('Pending...');
     	
     	jQuery.ajax({
 		       type: "POST",
 		       url: chat_localized["url"],
 		       data: {  
-					    'function': 'approve_once',
+					    'function': 'approve',
     					'cid': pid,
 					    'vip': vip,
 					    'file': file,
-					    'action': 'approveOnce',
+					    'action': 'chatProcess',
 					    'message_id': newid
 				     },
 		       dataType: "json",
 		       success: function(data){
-				    	 jQuery(element).parent().html('Approved!');
+				    	 jQuery(div).children("span.moderation").html('Approved!');
 		       }
 		    });
     }

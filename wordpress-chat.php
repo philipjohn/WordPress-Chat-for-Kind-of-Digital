@@ -125,11 +125,10 @@ class Chat {
 		add_action('admin_print_scripts-settings_page_chat', array(&$this, 'admin_scripts'));
 		
 		// Filters
-		// From process.php
 		add_action('wp_ajax_chatProcess', array(&$this, 'process'));
 		add_action('wp_ajax_nopriv_chatProcess', array(&$this, 'process'));
 		
-		// Only authenticated users (admin) can clear and archive
+		// Only authenticated users (admin) can moderate, clear and archive
 		add_action('wp_ajax_chatArchive', array(&$this, 'archive'));
 		add_action('wp_ajax_chatClear', array(&$this, 'clear'));
 		
@@ -2220,7 +2219,7 @@ class Chat {
 	 * @return	string			If $return is yes will return the output else echo
 	 */
 	function process($return = 'no') {
-		global $current_user, $blog_id;
+		global $current_user, $blog_id, $wpdb;
 		get_currentuserinfo();
 		
 		$function = $_POST['function'];
@@ -2245,10 +2244,10 @@ class Chat {
 		$log = array();
 	    
 		switch($function) {
-			case 'approve_once':
+			case 'approve':
 				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$message_id\r\n", FILE_APPEND);
 				$message_id = $_POST['message_id'];
-				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE  id =".date('Y-m-d H:i:s', $message_id)." LIMIT 1";
+				$update_query = "UPDATE  `".Chat::tablename('message')."` SET  `approved` =  'yes' WHERE `timestamp`='".date('Y-m-d H:i:s', $message_id)."' LIMIT 1";
 				$wpdb->query($update_query);
 				file_put_contents(trailingslashit(ABSPATH).'approved.log', "$update_query\r\n", FILE_APPEND);
 				break;
@@ -2282,24 +2281,24 @@ class Chat {
 		    				
 		    				$message = preg_replace(array('/\[code\]/','/\[\/code\]/'), array('<code style="background: '.$this->get_option('code_color', '#FFFFCC').'; padding: 4px 8px;">', '</code>'), $message);
 		    				
-						$code_start_count = preg_match_all('/<code/i', $message, $code_starts);
-						
-						$code_end_count = preg_match_all('/<\/code>/i', $message, $code_ends);
-						
-						if ($code_start_count > $code_end_count) {
-							$code_diff = $code_start_count - $code_end_count;
+							$code_start_count = preg_match_all('/<code/i', $message, $code_starts);
 							
-							for ($i=0; $i<$code_diff; $i++) {
-								$message .= '</code>';
-							}
-						} else {
-							$code_diff = $code_end_count - $code_start_count;
+							$code_end_count = preg_match_all('/<\/code>/i', $message, $code_ends);
 							
-							for ($i=0; $i<$code_diff; $i++) {
-								$message = '<code>'.$message;
+							if ($code_start_count > $code_end_count) {
+								$code_diff = $code_start_count - $code_end_count;
+								
+								for ($i=0; $i<$code_diff; $i++) {
+									$message .= '</code>';
+								}
+							} else {
+								$code_diff = $code_end_count - $code_start_count;
+								
+								for ($i=0; $i<$code_diff; $i++) {
+									$message = '<code>'.$message;
+								}
 							}
-						}
-						
+							
 		    				$message = str_replace("\n", "<br />", $message);
 		    				
 		    				$prepend = "";
@@ -2327,21 +2326,24 @@ class Chat {
 							
 							if ($moderator && $row->approved == 'no'){
 								$moderation = '<span class="moderation">
-									<ul>
-										<li class="status">Pending</li>
-										<li><a class="approve_once" href="#" onClick="approveOnce(this)">Approve this comment</a></li>
-										<li><a class="approve_user" href="#">Approve all user\'s messages</a></li>
-									</ul>
-								</div>';
+									<a class="approve_once" href="#" onClick="approveMsg(this)">Approve this comment</a>
+								</span>';
+							} else if ($moderator !==1 && $row->approved == 'no'){
+								$moderation = '<span class="moderation">
+									Your comment is pending approval by a moderator.
+								</span>';
 							}
 						
 		    				$prepend .= ' <span class="name" style="background: '.$name_color.';">'.stripslashes($row->name).'</span>';
 		    				
 		    				$text[$row->id] = " <div id='row-".strtotime($row->timestamp)."' class='row'>{$prepend}<span class='message' style='color: ".$_POST['text_color']."'>".convert_smilies($message)."</span>$moderation<div class='chat-clear'></div></div>";
 		    				$last_check = $row->timestamp;
-						if ($name != $row->name) {
-							$new_message = true;
-						}
+		    				
+							if ($name != $row->name) {
+								$new_message = true;
+							}
+							
+							unset($moderation); // stop putting moderation on all messages
 		    			}
 		    			
 					$log['text'] = $text;
@@ -2453,6 +2455,7 @@ class Chat {
 		$query = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id'$approved AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
 		$results = $wpdb->get_results($query);
 		
+		// user has not yet been approved so show them their own messages too
 		if ($is_approved[0] == 'no'){
 			$aquery = "SELECT * FROM `".Chat::tablename('message')."` WHERE blog_id = '$blog_id' AND chat_id = '$chat_id' AND name = '$is_approved[1]' AND approved = 'no' AND archived = '$archived' AND timestamp BETWEEN '$start' AND '$end' ORDER BY timestamp ASC;";
 			$aresults = $wpdb->get_results($aquery);
