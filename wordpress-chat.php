@@ -2244,7 +2244,6 @@ class Chat {
 		// Check if the current user is a moderator
 		$moderator_roles = explode(',', $_POST['moderator_roles']);
 		$moderator = $this->is_moderator($moderator_roles);
-		$message_id = $_POST['message_id'];
 		$log = array();
 		switch($function) {
 			case 'approve_once':
