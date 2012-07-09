@@ -13,14 +13,6 @@ page by clicking on the new chat icon in your post/page editor.
  Text Domain: chat
 */
 
-/*function log_all_queries($query){
-	if (strpos($query, 'LIKE') !== false){
-		file_put_contents(ABSPATH.'query.log', date('H:i:s')." ".$query."\r\n", FILE_APPEND);
-	}
-	return $query;
-}
-add_filter('query', 'log_all_queries');*/
-
 /**
  * @global	object	$chat	Convenient access to the chat object
  */
@@ -1978,26 +1970,44 @@ class Chat {
 		return $content;
 	}
 	
-		/**
-		 * Chat logs shortcode
-		 * 
-		 * Show a list of chat logs indepdently of a post or page
-		 * 
-		 * @since 1.0.10
-		 * @author Philip John <phil@philipjohn.co.uk>
-		 */
-		function chat_logs_shortcode($atts){
+	/**
+	 * Chat logs shortcode
+	 * 
+	 * Show a list of chat logs indepdently of a post or page
+	 * 
+	 * @since 1.0.10
+	 * @author Philip John <phil@philipjohn.co.uk>
+	 */
+	function chat_logs_shortcode($atts){
 		$a = shortcode_atts(array(
-			'id' => 1
+			'id' => 1,
+			'sound' => $this->get_option('sound', 'enabled'),
+			'avatar' => $this->get_option('avatar', 'enabled'),
+			'emoticons' => $this->get_option('emoticons', 'enabled'),
+			'date_show' => $this->get_option('date_show', 'disabled'),
+			'time_show' => $this->get_option('time_show', 'disabled'),
+			'width' => $this->get_option('width', '700px'),
+			'height' => $this->get_option('height', '425px'),
+			'background_color' => $this->get_option('background_color', '#ffffff'),
+			'background_highlighted_color' => $this->get_option('background_highlighted_color', '#FFE9AB'),
+			'date_color' => $this->get_option('date_color', '#6699CC'),
+			'name_color' => $this->get_option('name_color', '#666666'),
+			'moderator_name_color' => $this->get_option('moderator_name_color', '#6699CC'),
+			'text_color' => $this->get_option('text_color', '#000000'),
+			'font' => $this->get_option('font', ''),
+			'font_size' => $this->get_option('font_size', ''),
+			'log_creation' => $this->get_option('log_creation', 'disabled'),
+			'log_display' => $this->get_option('log_display', 'disabled'),
+			'login_options' => join(',', $this->get_option('login_options', array('current_user'))),
+			'moderator_roles' => join(',', $this->get_option('moderator_roles', array('administrator','editor','author'))),
 		), $atts);
 		
-		$dates = $this->get_archives($a['id']);
-			
+		$dates = $this->get_archives(intval($a['id']));
+		
 		if ( $dates && is_array($dates) ) {
 			$content .= '<div class="chat-note"><p><strong>' . __('Chat Logs', $this->translation_domain) . '</strong></p></div>';
 			foreach ($dates as $date) {
-				$date_content .= '<li><a class="chat-log-link" style="text-decoration: none;" href="' . $a['permalink'] . $a['url_separator'] . 'lid=' . $date->id . '">' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->start) + get_option('gmt_offset') * 3600, false) . ' - ' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->end) + get_option('gmt_offset') * 3600, false) . '</a>';
-				if (isset($_GET['lid']) && $_GET['lid'] == $date->id) {
+				$date_content .= '<li><a class="chat-log-link" style="text-decoration: none;" href="?' . $a['permalink'] . $a['url_separator'] . 'lid=' . $date->id . '">' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->start) + get_option('gmt_offset') * 3600, false) . ' - ' . date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($date->end) + get_option('gmt_offset') * 3600, false) . '</a>';
 					$_POST['cid'] = $a['id'];
 					$_POST['archived'] = 'yes';
 					$_POST['function'] = 'update';
@@ -2014,7 +2024,6 @@ class Chat {
 					$date_content .= '<div class="chat-wrap avatar-'.$a['avatar'].'" style="background-color: '.$a['background_color'].'; '.$a['font_style'].'"><div class="chat-area" >';
 					$date_content .= $this->process('yes');
 					$date_content .= '</div></div>';
-				}
 				$date_content .= '</li>';
 			}
 			
