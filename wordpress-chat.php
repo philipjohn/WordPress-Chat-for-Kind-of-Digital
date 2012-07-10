@@ -2229,21 +2229,13 @@ class Chat {
 	 */
 	function process($return = 'no') {
 		global $current_user, $blog_id, $wpdb;
+		
 		get_currentuserinfo();
 		
 		$function = $_POST['function'];
 		
 		if ( empty($function) ) {
 			$function = $_GET['function'];
-		}
-		
-		file_put_contents(trailingslashit(ABSPATH).'query.log', "POST: \r\n", FILE_APPEND);
-		foreach ($_POST as $key => $value){
-			file_put_contents(trailingslashit(ABSPATH).'query.log', "	$key: $value\r\n", FILE_APPEND);
-		}
-		file_put_contents(trailingslashit(ABSPATH).'query.log', "GET: \r\n", FILE_APPEND);
-		foreach ($_GET as $key => $value){
-			file_put_contents(trailingslashit(ABSPATH).'query.log', "	$key: $value\r\n", FILE_APPEND);
 		}
 		
 		// Check if the current user is a moderator
